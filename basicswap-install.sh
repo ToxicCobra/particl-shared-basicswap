@@ -14,7 +14,7 @@ function install_dependencies_fedora() {
 }
 
 function install_dependencies_arch() {
-    sudo pacman -S --needed python python-venv python-pip gnupg unzip protobuf automake libtool pkg-config curl jq git wget
+    sudo pacman -S --needed python python-virtualenv python-pip gnupg unzip protobuf automake libtool pkg-config curl jq git wget
 }
 
 function install_dependencies_suse() {
