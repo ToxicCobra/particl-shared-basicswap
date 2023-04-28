@@ -16,6 +16,17 @@ Install-Dependencies-Windows
 Write-Host "Please enter the absolute path to the directory where you wish to install BasicSwap:"
 $INSTALL_PATH = Read-Host
 
+# Prompt the user for the coins they want to include
+Write-Host "Please choose the coins you want to include (separate with commas, no spaces):"
+Write-Host "Options: monero, bitcoin, litecoin, dash, pivx, firo"
+$SELECTED_COINS = Read-Host
+
+# Verify the user's input
+if ($SELECTED_COINS -notmatch '^[a-zA-Z,]+$') {
+    Write-Host "Invalid input. Please only use comma-separated coin names without spaces."
+    exit 1
+}
+
 # Set the location where the local nodes for the coins that will be included in BasicSwap will be installed
 $COINDATA_PATH = Join-Path $INSTALL_PATH "coindata"
 Write-Host "The path to the coins data dirs folder is $COINDATA_PATH"
@@ -62,7 +73,14 @@ pip install protobuf==3.20.*
 pip install .
 
 # Initialize the coins data directory
-$CURRENT_XMR_HEIGHT = (curl https://localmonero.co/blocks/api/get_stats | jq .height) & basicswap-prepare --datadir=$COINDATA_PATH --withcoins=monero,bitcoin,litecoin,dash,pivx,firo --xmrrestoreheight=$CURRENT_XMR_HEIGHT --usebtcfastsync
+if ($SELECTED_COINS.Contains("monero")) {
+    $CURRENT_XMR_HEIGHT = (Invoke-WebRequest -Uri "https://localmonero.co/blocks/api/get_stats" | ConvertFrom-Json).height
+    basicswap-prepare --datadir=$COINDATA_PATH --withcoins=$SELECTED_COINS --xmrrestoreheight=$CURRENT_XMR_HEIGHT --usebtcfastsync
+} else {
+    $CURRENT_XMR_HEIGHT = "0"
+    basicswap-prepare --datadir=$COINDATA_PATH --withcoins=$SELECTED_COINS --usebtcfastsync
+}
+
 
 Write-Host "To start the Basic Swap DEX, run the command below:"
 Write-Host "cd $INSTALL_PATH; . $activate; basicswap-run --datadir=$COINDATA_PATH"

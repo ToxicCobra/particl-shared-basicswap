@@ -23,6 +23,17 @@ fi
 echo "Please enter the absolute path to the directory where you wish to install BasicSwap:"
 read INSTALL_PATH
 
+# Prompt the user for the coins they want to include
+echo "Please choose the coins you want to include (separate with commas, no spaces):"
+echo "Options: monero, bitcoin, litecoin, dash, pivx, firo"
+read SELECTED_COINS
+
+# Verify the user's input
+if ! [[ "$SELECTED_COINS" =~ ^[a-zA-Z,]+$ ]]; then
+    echo "Invalid input. Please only use comma-separated coin names without spaces."
+    exit 1
+fi
+
 # Set the location where the local nodes for the coins that will be included in BasicSwap will be installed
 COINDATA_PATH=$INSTALL_PATH/coindata
 echo "The path to the coins data dirs folder is $COINDATA_PATH"
@@ -76,12 +87,16 @@ pip3 install .
 
 echo "Initializing the coins data directory $COINDATA_PATH"
 
-CURRENT_XMR_HEIGHT=$(curl https://localmonero.co/blocks/api/get_stats | jq .height)
-basicswap-prepare --datadir=$COINDATA_PATH --withcoins=monero,bitcoin,litecoin,dash,pivx,firo --xmrrestoreheight=$CURRENT_XMR_HEIGHT --usebtcfastsync
+if [[ "$SELECTED_COINS" == *monero* ]]; then
+    CURRENT_XMR_HEIGHT=$(curl https://localmonero.co/blocks/api/get_stats | jq .height)
+    basicswap-prepare --datadir=$COINDATA_PATH --withcoins=$SELECTED_COINS --xmrrestoreheight=$CURRENT_XMR_HEIGHT --usebtcfastsync
+else
+    CURRENT_XMR_HEIGHT="0"
+    basicswap-prepare --datadir=$COINDATA_PATH --withcoins=$SELECTED_COINS --usebtcfastsync
+fi
 
 echo "To start the Basic Swap DEX, run the command below:"
 echo "source $INSTALL_PATH/basicswap_venv/bin/activate && basicswap-run --datadir=$COINDATA_PATH"
 echo "!!!DO NOT FORGET TO WRITE DOWN THE 24 WORDS (RECOVERY PHRASE) PRINTED A FEW LINES ABOVE!!!"
 echo "If you have added XMR support, please write down the CURRENT_XMR_HEIGHT=$CURRENT_XMR_HEIGHT"
 echo "You will need this number if you want to restore the XMR node from the seed phrase"
-
