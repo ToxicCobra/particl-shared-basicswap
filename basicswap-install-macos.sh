@@ -88,11 +88,19 @@ pip3 install .
 echo "Initializing the coins data directory $COINDATA_PATH"
 
 if [[ "$SELECTED_COINS" == *monero* ]]; then
-    CURRENT_XMR_HEIGHT=$(curl https://localmonero.co/blocks/api/get_stats | jq .height)
-    basicswap-prepare --datadir=$COINDATA_PATH --withcoins=$SELECTED_COINS --xmrrestoreheight=$CURRENT_XMR_HEIGHT --usebtcfastsync
+        CURRENT_XMR_HEIGHT=$(curl https://localmonero.co/blocks/api/get_stats | jq .height)
+    if [[ "$SELECTED_COINS" == *bitcoin* ]]; then
+        basicswap-prepare --datadir=$COINDATA_PATH --withcoins=$SELECTED_COINS --xmrrestoreheight=$CURRENT_XMR_HEIGHT --usebtcfastsync
+    else
+        basicswap-prepare --datadir=$COINDATA_PATH --withcoins=$SELECTED_COINS --xmrrestoreheight=$CURRENT_XMR_HEIGHT
+    fi
 else
-    CURRENT_XMR_HEIGHT="0"
-    basicswap-prepare --datadir=$COINDATA_PATH --withcoins=$SELECTED_COINS --usebtcfastsync
+    CURRENT_XMR_HEIGHT= "0"
+    if [[ "$SELECTED_COINS" == *bitcoin* ]]; then
+        basicswap-prepare --datadir=$COINDATA_PATH --withcoins=$SELECTED_COINS --usebtcfastsync
+    else
+        basicswap-prepare --datadir=$COINDATA_PATH --withcoins=$SELECTED_COINS
+    fi
 fi
 
 echo "To start the Basic Swap DEX, run the command below:"

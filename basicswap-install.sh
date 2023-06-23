@@ -57,13 +57,23 @@ else
     exit 1
 fi
 
-echo "Please enter the absolute path to the directory where you wish to install BasicSwap:"
-read INSTALL_PATH
+# echo "Please enter the absolute path to the directory where you wish to install BasicSwap:"
+# read INSTALL_PATH
 
-# Prompt the user for the coins they want to include
-echo "Please choose the coins you want to include (separate with commas, no spaces):"
-echo "Options: monero, bitcoin, litecoin, dash, pivx, firo"
-read SELECTED_COINS
+# # Prompt the user for the coins they want to include
+# echo "Please choose the coins you want to include (separate with commas, no spaces):"
+# echo "Options: monero, bitcoin, litecoin, dash, pivx, firo"
+# read SELECTED_COINS
+
+# Get install parameters
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        --install-path) INSTALL_PATH="$2"; shift ;;
+        --selected-coins) SELECTED_COINS="$2"; shift ;;
+        *) echo "Unknown parameter: $1"; exit 1 ;;
+    esac
+    shift
+done
 
 # Verify the user's input
 if ! [[ "$SELECTED_COINS" =~ ^[a-zA-Z,]+$ ]]; then
@@ -125,11 +135,19 @@ pip3 install .
 echo "Initializing the coins data directory $COINDATA_PATH"
 
 if [[ "$SELECTED_COINS" == *monero* ]]; then
-    CURRENT_XMR_HEIGHT=$(curl https://localmonero.co/blocks/api/get_stats | jq .height)
-    basicswap-prepare --datadir=$COINDATA_PATH --withcoins=$SELECTED_COINS --xmrrestoreheight=$CURRENT_XMR_HEIGHT --usebtcfastsync
+        CURRENT_XMR_HEIGHT=$(curl https://localmonero.co/blocks/api/get_stats | jq .height)
+    if [[ "$SELECTED_COINS" == *bitcoin* ]]; then
+        basicswap-prepare --datadir=$COINDATA_PATH --withcoins=$SELECTED_COINS --xmrrestoreheight=$CURRENT_XMR_HEIGHT --usebtcfastsync
+    else
+        basicswap-prepare --datadir=$COINDATA_PATH --withcoins=$SELECTED_COINS --xmrrestoreheight=$CURRENT_XMR_HEIGHT
+    fi
 else
-    CURRENT_XMR_HEIGHT="0"
-    basicswap-prepare --datadir=$COINDATA_PATH --withcoins=$SELECTED_COINS --usebtcfastsync
+    CURRENT_XMR_HEIGHT= "0"
+    if [[ "$SELECTED_COINS" == *bitcoin* ]]; then
+        basicswap-prepare --datadir=$COINDATA_PATH --withcoins=$SELECTED_COINS --usebtcfastsync
+    else
+        basicswap-prepare --datadir=$COINDATA_PATH --withcoins=$SELECTED_COINS
+    fi
 fi
 
 echo "To start the Basic Swap DEX, run the command below:"

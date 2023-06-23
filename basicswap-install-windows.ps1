@@ -73,14 +73,21 @@ pip install protobuf==3.20.*
 pip install .
 
 # Initialize the coins data directory
-if ($SELECTED_COINS.Contains("monero")) {
+if ($SELECTED_COINS -like "*monero*") {
     $CURRENT_XMR_HEIGHT = (Invoke-WebRequest -Uri "https://localmonero.co/blocks/api/get_stats" | ConvertFrom-Json).height
-    basicswap-prepare --datadir=$COINDATA_PATH --withcoins=$SELECTED_COINS --xmrrestoreheight=$CURRENT_XMR_HEIGHT --usebtcfastsync
+    if ($SELECTED_COINS -like "*bitcoin*") {
+        basicswap-prepare --datadir=$COINDATA_PATH --withcoins=$SELECTED_COINS --xmrrestoreheight=$CURRENT_XMR_HEIGHT --usebtcfastsync
+    } else {
+        basicswap-prepare --datadir=$COINDATA_PATH --withcoins=$SELECTED_COINS --xmrrestoreheight=$CURRENT_XMR_HEIGHT
+    }
 } else {
     $CURRENT_XMR_HEIGHT = "0"
-    basicswap-prepare --datadir=$COINDATA_PATH --withcoins=$SELECTED_COINS --usebtcfastsync
+    if ($SELECTED_COINS -like "*bitcoin*") {
+        basicswap-prepare --datadir=$COINDATA_PATH --withcoins=$SELECTED_COINS --usebtcfastsync
+    } else {
+        basicswap-prepare --datadir=$COINDATA_PATH --withcoins=$SELECTED_COINS
+    }
 }
-
 
 Write-Host "To start the Basic Swap DEX, run the command below:"
 Write-Host "cd $INSTALL_PATH; . $activate; basicswap-run --datadir=$COINDATA_PATH"
